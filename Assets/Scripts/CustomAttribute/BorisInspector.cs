@@ -21,18 +21,6 @@ namespace Boris.CustomAttributes
 			if (anyBorisAttribute) ManageAttributesValues();
 
 			DrawDefaultInspector();
-			//if (!anyNaughtyAttribute)
-			//{
-			//	DrawDefaultInspector();
-			//}
-			//else
-			//{
-			//	DrawSerializedProperties();
-			//}
-			//
-			//DrawNonSerializedFields();
-			//DrawNativeProperties();
-			//DrawButtons();
 		}
 
 		protected void GetSerializedProperties(ref List<SerializedProperty> outSerializedProperties)
@@ -40,7 +28,6 @@ namespace Boris.CustomAttributes
 			outSerializedProperties.Clear();
 			using (var iterator = serializedObject.GetIterator())
 			{
-				//Debug.Log(serializedObject.targetObject.name);
 				if (iterator.NextVisible(true))
 				{
 					do
@@ -48,15 +35,12 @@ namespace Boris.CustomAttributes
 						outSerializedProperties.Add(serializedObject.FindProperty(iterator.name));
 					}
 					while (iterator.NextVisible(false));
-
-					//outSerializedProperties.ForEach(a => Debug.Log(a.name));
 				}
 			}
 		}
 
 		void ManageAttributesValues()
         {
-			//Debug.Log("Found usage of Boris Attributes");
 			List<string> differentIds = new List<string>();
 			Dictionary<string, List<SerializedProperty>> sortedDifferentProperties = new Dictionary<string, List<SerializedProperty>>();
 
@@ -89,8 +73,6 @@ namespace Boris.CustomAttributes
 
 		void ManageValues(Dictionary<string, List<SerializedProperty>> valueGroups)
         {
-			//Debug.Log($"ManageValues() {valueGroups.Count}");
-
 			if (recordedProperties == null)
             {
 				RecordOldProperties(valueGroups);
@@ -104,13 +86,11 @@ namespace Boris.CustomAttributes
 				if (valueFound && oldValueFound) ManageValuesForSharedValueGroup(a, values, oldValues);
             }
 
-			// update previous values for the next iteration
 			RecordOldProperties(valueGroups);
 		}
 
 		void ManageValuesForSharedValueGroup(string valueGroupName, List<SerializedProperty> properties, List<RecordedValue> oldProperties)
         {
-			//Debug.Log($"ManageValuesForSharedValueGroup[{valueGroupName}]");
 			var attribute = PropertyUtility.GetAttribute<SharedValueAttribute>(properties[0]);
 
 			ClampValuesIfNeeded(attribute, valueGroupName, properties);
@@ -125,21 +105,11 @@ namespace Boris.CustomAttributes
 				{
 					if (a.floatValue < attribute.SharedMinValue)
 					{
-						//Debug.Log($"Value exceeds min value - Min[{attribute.SharedMinValue}] Current[{a.floatValue}]");
-						a.serializedObject.Update();
-						a.floatValue = attribute.SharedMinValue;
-						EditorGUILayout.PropertyField(a);
-						a.serializedObject.ApplyModifiedProperties();
-						//Debug.Log($"Tried to change property value, now value is [{a.floatValue}]");
+						UpdateSerializedPropertyValue(a, attribute.SharedMinValue);
 					}
 					if (a.floatValue > attribute.SharedMaxValue)
 					{
-						//Debug.Log($"Value exceeds max value - Max[{attribute.SharedMaxValue}] Current[{a.floatValue}]");
-						a.serializedObject.Update();
-						a.floatValue = attribute.SharedMaxValue;
-						EditorGUILayout.PropertyField(a);
-						a.serializedObject.ApplyModifiedProperties();
-						//Debug.Log($"Tried to change property value, now value is [{a.floatValue}]");
+						UpdateSerializedPropertyValue(a, attribute.SharedMaxValue);
 					}
 				}
 			}
@@ -151,9 +121,6 @@ namespace Boris.CustomAttributes
 			{
 				if (properties[i].floatValue != oldProperties[i].oldValue)
 				{
-					//Debug.Log($"Detected Value Changed: Old [{oldProperties[i].oldValue}], New [{properties[i].floatValue}]");
-
-					// [i] will be used as a primary property, others will redistribute their values
 					List<SerializedProperty> valuesToRedistribute = new List<SerializedProperty>();
 
 					for (int j = 0; j < properties.Count; j++)
@@ -204,7 +171,6 @@ namespace Boris.CustomAttributes
         {
 			a.serializedObject.Update();
 			a.floatValue = value;
-			EditorGUILayout.PropertyField(a);
 			a.serializedObject.ApplyModifiedProperties();
 		}
 
